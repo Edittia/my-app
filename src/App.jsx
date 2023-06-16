@@ -11,7 +11,7 @@ import {
   FormText,
   Modal, ModalHeader, ModalBody, ModalFooter
 } from "reactstrap";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 
 let siswa = [
@@ -41,7 +41,32 @@ let siswa = [
   },
 ];
 
+
+
 function App() {
+
+  const myFetch = async() => {
+    try {
+        let response = await fetch(url, {
+            method: "GET",
+            // body: JSON.stringify(siswa),
+        })
+        alert("Data berhasil masuk");
+        console.log(siswa)
+        console.log(response)
+        if (!response.ok) {
+            throw new Error(response.status);
+        }
+    }
+    catch (error) {
+        console.log(`terjadi gangguan dengan pesan:"${error}"`);
+    }
+}
+
+myFetch();
+
+
+
   const [tanggal, setTanggal] = useState(new Date());
 
   const [listsiswa, setListsiswa] = useState({

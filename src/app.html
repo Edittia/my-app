@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>FIREBASE</h1>
+    <script>
+
+        let siswa =
+        {
+            id: "19",
+            nama: "Edittia Jon Veri",
+            jk: "L",
+            asalsekolah: 'SMK PDI Perjuangan ',
+            alamat: "Kepanjen, Malang",
+        }
+
+        let url = "https://tugas-reactjs-default-rtdb.asia-southeast1.firebasedatabase.app/siswa.json";
+       
+
+        const myFetch = async() => {
+            try {
+                let response = await fetch(url, {
+                    method: "GET",
+                    // body: JSON.stringify(siswa),
+                })
+                alert("Data berhasil masuk");
+                console.log(siswa)
+                console.log(response)
+                if (!response.ok) {
+                    throw new Error(response.status);
+                }
+            }
+            catch (error) {
+                console.log(`terjadi gangguan dengan pesan:"${error}"`);
+            }
+        }
+
+        myFetch();
+    </script>
+</body>
+
+</html>
