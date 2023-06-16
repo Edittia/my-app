@@ -12,60 +12,83 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter
 } from "reactstrap";
 import React, { useEffect, useState } from "react";
+import app from './firebase';
+import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 
 
-let siswa = [
-  {
-    id: "12",
-    nama: "Bayu Nugroho",
-    jk: "P",
-    asalsekolah: 'Ponpes Darussalam',
-    alamat: "Samarinda",
-    button: "",
-  },
-  {
-    id: "23",
-    nama: "Ahmad Malik Ibrahim",
-    jk: "P",
-    asalsekolah: 'Ponpes Ar-Rahman Malang',
-    alamat: "Samarinda",
-    button: "",
-  },
-  {
-    id: "32",
-    nama: "Akbar Dwi Prasetyo",
-    jk: "L",
-    asalsekolah: 'Ponpes An-Nahl Mojokerto',
-    alamat: "Samarinda",
-    button: "",
-  },
-];
 
 
+let url = "https://tugas-reactjs-default-rtdb.asia-southeast1.firebasedatabase.app/siswa.json";
 
 function App() {
 
-  const myFetch = async() => {
-    try {
-        let response = await fetch(url, {
-            method: "GET",
-            // body: JSON.stringify(siswa),
-        })
-        alert("Data berhasil masuk");
-        console.log(siswa)
-        console.log(response)
-        if (!response.ok) {
-            throw new Error(response.status);
+  const [siswa, setSiswa] = useState([]);
+
+  useEffect(() => {
+    // const myFetch = async () => {
+    //   try {
+    //     let response = await fetch(url, {
+    //       method: "GET",
+
+    //     })
+
+    //     if (!response.ok) {
+    //       throw new Error(response.status);
+    //     }
+    //     let responseData = await response.json();
+
+    //     const dataSiswa = [];
+    //     for (const siswa_ in responseData) {
+    //       if (Object.hasOwnProperty.call(responseData, siswa_)) {
+    //         const alamat = responseData[siswa_]['alamat'];
+    //         const asalsekolah = responseData[siswa_]['asalsekolah'];
+    //         const jk = responseData[siswa_]['jk'];
+    //         const nama = responseData[siswa_]['nama'];
+    //         const id = siswa_;
+    //         // console.log(data_siswa)
+    //         dataSiswa.push({
+    //           'alamat': alamat,
+    //           'nama': nama,
+    //           'jk': jk,
+    //           'asalsekolah': asalsekolah,
+    //           'id': id
+    //         });
+    //       }
+
+    //     }
+
+    //     setSiswa(dataSiswa)
+    //   }
+    //   catch (error) {
+    //     console.log(`terjadi gangguan dengan pesan:"${error}"`);
+    //   }
+
+    // }
+    const db = getDatabase(app);
+    const starCountRef = ref(db, 'siswa/');
+    
+    onValue(starCountRef, (snapshot) => {
+      const dataKu = snapshot.val();
+      // console.log(typeof dataKu);
+      const dataSiswa = [];
+      for (const key in dataKu) {
+        if (Object.hasOwnProperty.call(dataKu, key)) {
+          const n = dataKu[key];
+          dataSiswa.push({
+            'alamat': n.alamat,
+            'nama': n.nama,
+            'jk': n.jk,
+            'asalsekolah': n.asalsekolah,
+            'id': key
+          });
         }
-    }
-    catch (error) {
-        console.log(`terjadi gangguan dengan pesan:"${error}"`);
-    }
-}
+      }
 
-myFetch();
+      setSiswa(dataSiswa)
+    });
 
-
+    // myFetch();
+  }, [])
 
   const [tanggal, setTanggal] = useState(new Date());
 
@@ -79,7 +102,7 @@ myFetch();
   });
 
 
-  let clearState= () =>{
+  let clearState = () => {
     setListsiswa({
       id: "",
       nama: "",
@@ -90,28 +113,41 @@ myFetch();
     });
   }
 
-   let deleteButton = (data) => {
-     let newData = siswa.filter((siswa) => siswa.id !== data);
-     siswa = newData;
-     clearState();
-   };
+  let deleteButton = (data) => {
+    // let newData = siswa.filter((siswa) => siswa.id !== data);
+    // siswa = newData;
+    const db = getDatabase(app);
+    const starCountRef = ref(db, 'siswa/' + data);
+
+    remove(starCountRef, { data }
+    ).then(() => {
+      alert('data berhasil dihapus')
+      // Data saved successfully!
+    })
+      .catch((error) => {
+        alert('data gagal hapus')
+        // The write failed...
+      });;
+    clearState();
+  };
 
   let editButton = (data) => {
+    console.log('Ini mulai ubah')
     let newData = siswa.filter((i) => i.id === data);
-    console.log( newData[0].id);
+    console.log(' ini id => ' + data);
+
     return setListsiswa({
-      id:newData[0].id,
+      id: data,
       nama: newData[0].nama,
       alamat: newData[0].alamat,
       asalsekolah: newData[0].asalsekolah,
       jk: newData[0].jk,
       button: "ubah",
     });
-    // console.log(listsiswa);
   };
 
 
- 
+
   const [modal, setModal] = useState(false);
 
   const toggle = () => setModal(!modal);
@@ -119,8 +155,10 @@ myFetch();
     <>
       <div className="container">
         <div className="row text-center"><h2>Daftar Mahasantri Baru</h2></div>
-        <Button color="danger" onClick={()=>{ toggle()
-           clearState() }}>
+        <Button color="danger" onClick={() => {
+          toggle();
+          clearState();
+        }}>
           Tambah data
         </Button>
         <Modal isOpen={modal} toggle={toggle}>
@@ -137,9 +175,9 @@ myFetch();
                   type="text"
                   onChange={(a) => {
                     console.log(a.target.value);
-                   const newListSiswa = { ...listsiswa };
-                   newListSiswa.nama = a.target.value;
-                   setListsiswa(newListSiswa);
+                    const newListSiswa = { ...listsiswa };
+                    newListSiswa.nama = a.target.value;
+                    setListsiswa(newListSiswa);
 
                   }}
                 />
@@ -151,11 +189,11 @@ myFetch();
                     name="radio1"
                     type="radio"
                     value="L"
-                    checked={listsiswa.jk == "L"}
+                    checked={listsiswa.jk === "L"}
                     onClick={(a) => {
-                     const newListSiswa = { ...listsiswa };
-                     newListSiswa.jk = a.target.value;
-                     setListsiswa(newListSiswa);
+                      const newListSiswa = { ...listsiswa };
+                      newListSiswa.jk = a.target.value;
+                      setListsiswa(newListSiswa);
 
                     }}
                   />{" "}
@@ -166,11 +204,11 @@ myFetch();
                     name="radio1"
                     type="radio"
                     value="P"
-                    checked={listsiswa.jk == "P"}
+                    checked={listsiswa.jk === "P"}
                     onClick={(a) => {
-                     const newListSiswa = { ...listsiswa };
-                     newListSiswa.jk = a.target.value;
-                     setListsiswa(newListSiswa);
+                      const newListSiswa = { ...listsiswa };
+                      newListSiswa.jk = a.target.value;
+                      setListsiswa(newListSiswa);
 
                     }}
                   />{" "}
@@ -186,9 +224,9 @@ myFetch();
                   type="textarea"
                   onChange={(a) => {
                     console.log(a.target.value);
-                  const newListSiswa = { ...listsiswa };
-                  newListSiswa.alamat = a.target.value;
-                  setListsiswa(newListSiswa);
+                    const newListSiswa = { ...listsiswa };
+                    newListSiswa.alamat = a.target.value;
+                    setListsiswa(newListSiswa);
 
                   }}
                 />
@@ -199,31 +237,71 @@ myFetch();
                   value={listsiswa.asalsekolah}
                   type="text"
                   onChange={(a) => {
-                   const newListSiswa = { ...listsiswa };
-                   newListSiswa.asalsekolah = a.target.value;
-                   setListsiswa(newListSiswa);
+                    const newListSiswa = { ...listsiswa };
+                    newListSiswa.asalsekolah = a.target.value;
+                    setListsiswa(newListSiswa);
                   }}
                 />{" "}
               </FormGroup>
               <Button
                 onClick={() => {
-                  if (listsiswa.button == "ubah") {
-                    let data = siswa.findIndex((a) => a.id === listsiswa.id);
-                    console.log(data);
-                    siswa.splice(data, 1, listsiswa);
+                  if (listsiswa.button === "ubah") {
+                    const db = getDatabase(app);
+                    const dbref = ref(db, 'siswa/' + listsiswa.id);
+                    const data = {
+                      nama: listsiswa.nama,
+                      alamat: listsiswa.alamat,
+                      jk: listsiswa.jk,
+                      asalsekolah: listsiswa.asalsekolah,
+                    }
+                    update(dbref, data )
+                    .then(() => {
+                      alert('data berhasil masuk update')
+                      // Data saved successfully!
+                    })
+                      .catch((error) => {
+                        alert('data gagal')
+                        // The write failed...
+                      });;
                     clearState();
+                    // let data = siswa.findIndex((a) => a.id === listsiswa.id);
+                    // console.log(data);
+                    // siswa.splice(data, 1, listsiswa);
+                    // clearState();
                   } else {
-                      const newListSiswa = { ...listsiswa };
-                      newListSiswa.id = Math.floor(Math.random() * 10);
-                      const siswaBaru = newListSiswa;
-                      if (siswaBaru.nama.trim() === "") {
-                        alert("Nama harus diisi");
-                      } else {
-                        siswa.push(siswaBaru);
-                        clearState();
-                        console.log(siswaBaru);
+                    const newListSiswa = { ...listsiswa };
+                    const siswaBaru = newListSiswa;
+                    if (siswaBaru.nama.trim() === "") {
+                      alert("Nama harus diisi");
+                    } else {
+                      siswa.push(siswaBaru);
+
+                      const myFetch = async () => {
+                        try {
+                          let response = await fetch(url, {
+
+                            method: "POST",
+                            body: JSON.stringify(siswaBaru),
+                          })
+                          alert("Data berhasil masuk");
+                          console.log(siswaBaru)
+                          console.log(response)
+                          if (!response.ok) {
+                            throw new Error(response.status);
+                          }
+                          let responseData = await response.json();
+                          console.log(responseData);
+                        }
+                        catch (error) {
+                          console.log(`terjadi gangguan dengan pesan:"${error}"`);
+                        }
                       }
-                      setListsiswa(newListSiswa); 
+
+                      myFetch();
+                      clearState();
+                      console.log(siswaBaru);
+                    }
+                    setListsiswa(newListSiswa);
                   }
                 }}
               >
@@ -250,7 +328,7 @@ myFetch();
           <tbody>
             {siswa.map((list, i) => {
               return (
-                <tr>
+                <tr key={i}>
                   <th scope="row">{i + 1}</th>
                   <td>{list.nama}</td>
                   <td>{list.alamat}</td>
@@ -264,7 +342,7 @@ myFetch();
                         toggle();
                       }}
                     >
-                      Edit 
+                      Edit
                     </Button>
                     |{" "}
                     <Button
@@ -321,4 +399,3 @@ export default App;
 //         </a>
 //       </header>
 //     </div>
-    

@@ -15,27 +15,30 @@
         let siswa =
         {
             id: "19",
-            nama: "Edittia Jon Veri",
+            nama: "Abdurrohman hanif",
             jk: "L",
             asalsekolah: 'SMK PDI Perjuangan ',
             alamat: "Kepanjen, Malang",
         }
 
         let url = "https://tugas-reactjs-default-rtdb.asia-southeast1.firebasedatabase.app/siswa.json";
-       
 
-        const myFetch = async() => {
+
+        const myFetch = async () => {
             try {
                 let response = await fetch(url, {
                     method: "GET",
+                    // method: "POST",
                     // body: JSON.stringify(siswa),
                 })
                 alert("Data berhasil masuk");
-                console.log(siswa)
+                // console.log(siswa)
                 console.log(response)
                 if (!response.ok) {
                     throw new Error(response.status);
                 }
+                let responseData = await response.json();
+                console.log(responseData);
             }
             catch (error) {
                 console.log(`terjadi gangguan dengan pesan:"${error}"`);
